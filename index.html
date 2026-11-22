@@ -219,8 +219,13 @@
   label { display:flex; flex-direction:column; gap:6px; font-size:14px; line-height:22px; color:var(--text); }
   input[type=text], input[type=number], input[type=date], select { height:40px; border:1px solid var(--border); border-radius:var(--radius-sm); padding:4px 11px; background:var(--card); color:var(--text); width:100%; }
   /* iOS Safari ignores height/width on native date inputs; remove native styling so they match other fields */
-  input[type=date] { -webkit-appearance:none; appearance:none; box-sizing:border-box; display:block; min-width:0; max-width:100%; height:40px; line-height:normal; }
-  label:has(> input[type=date]) { min-width:0; }
+  /* iOS Safari sizes native date inputs from their inner fields; override those parts so date fields match text fields */
+  input[type=date] { -webkit-appearance:none; appearance:none; box-sizing:border-box; display:block; width:100%; min-width:0; max-width:100%; height:40px; min-height:40px; max-height:40px; padding:0 11px; margin:0; line-height:38px; text-align:left; font-size:16px; overflow:hidden; }
+  input[type=date]::-webkit-date-and-time-value { text-align:left; margin:0; padding:0; min-height:0; height:auto; }
+  input[type=date]::-webkit-datetime-edit { padding:0; line-height:38px; }
+  input[type=date]::-webkit-datetime-edit-fields-wrapper { padding:0; }
+  input[type=date]::-webkit-calendar-picker-indicator { margin:0; padding:0; }
+  label:has(> input[type=date]), label:has(> input[type=date]) > * { min-width:0; max-width:100%; }
   input:hover, select:hover { border-color:var(--primary-hover); }
   input:focus, select:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 2px rgba(22,119,255,.2); }
   input[readonly] { background:var(--fill); font-weight:600; }
@@ -985,8 +990,8 @@
 
   // ===== App version and updates =====
   // The app reads the latest released version from version.js on each launch.
-  const APP_VERSION = "1.0.1";
-  const LATEST = window.LATEST_RELEASE || { version: "1.0.1", released: "2026-11-22" };
+  const APP_VERSION = "1.0.2";
+  const LATEST = window.LATEST_RELEASE || { version: "1.0.2", released: "2026-11-22" };
   let appVersion = APP_VERSION, updateDismissed = false;
   const newerThan = (a, b) => {
     const x = a.split(".").map(Number), y = b.split(".").map(Number);
