@@ -218,6 +218,9 @@
   .grid { display:grid; grid-template-columns:1fr; gap:16px; }
   label { display:flex; flex-direction:column; gap:6px; font-size:14px; line-height:22px; color:var(--text); }
   input[type=text], input[type=number], input[type=date], select { height:40px; border:1px solid var(--border); border-radius:var(--radius-sm); padding:4px 11px; background:var(--card); color:var(--text); width:100%; }
+  /* iOS Safari ignores height/width on native date inputs; remove native styling so they match other fields */
+  input[type=date] { -webkit-appearance:none; appearance:none; box-sizing:border-box; display:block; min-width:0; max-width:100%; height:40px; line-height:normal; }
+  label:has(> input[type=date]) { min-width:0; }
   input:hover, select:hover { border-color:var(--primary-hover); }
   input:focus, select:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 2px rgba(22,119,255,.2); }
   input[readonly] { background:var(--fill); font-weight:600; }
@@ -982,8 +985,8 @@
 
   // ===== App version and updates =====
   // The app reads the latest released version from version.js on each launch.
-  const APP_VERSION = "1.0.0";
-  const LATEST = window.LATEST_RELEASE || { version: "1.0.0", released: "2026-11-22" };
+  const APP_VERSION = "1.0.1";
+  const LATEST = window.LATEST_RELEASE || { version: "1.0.1", released: "2026-11-22" };
   let appVersion = APP_VERSION, updateDismissed = false;
   const newerThan = (a, b) => {
     const x = a.split(".").map(Number), y = b.split(".").map(Number);
