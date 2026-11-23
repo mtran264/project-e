@@ -803,8 +803,8 @@
     $("addListing").classList.toggle("hidden", profiles.every(p => formListings.some(l => l.mkt === p.id)));
     $("listingRows").innerHTML = formListings.map((l, k) => `
       <div class="listing-row">
-        <label><span class="lbl">Marketplace</span><select data-lk="${k}" data-f="mkt">${profiles.some(p => p.id === l.mkt) ? "" : '<option disabled selected>Removed marketplace</option>'}${profiles.filter(p => p.id === l.mkt || !formListings.some(o => o.mkt === p.id)).map(p => `<option value="${p.id}" ${p.id === l.mkt ? "selected" : ""}>${p.name}</option>`).join("")}</select></label>
-        <label><span class="lbl">Listing link</span><div class="with-copy"><input type="text" data-lk="${k}" data-f="url" value="${l.url || ""}" placeholder="https://"><button type="button" class="copy-btn" data-copy-val="${k}" aria-label="Copy listing link" title="Copy link">${COPY_SVG}</button></div></label>
+        <label><span class="lbl">Marketplace</span><select data-lk="${k}" data-f="mkt">${profiles.some(p => p.id === l.mkt) ? "" : '<option disabled selected>Removed marketplace</option>'}${profiles.filter(p => p.id === l.mkt || !formListings.some(o => o.mkt === p.id)).map(p => `<option value="${p.id}" ${p.id === l.mkt ? "selected" : ""}>${escapeHTML(p.name)}</option>`).join("")}</select></label>
+        <label><span class="lbl">Listing link</span><div class="with-copy"><input type="text" data-lk="${k}" data-f="url" value="${escapeHTML(l.url || "")}" placeholder="https://"><button type="button" class="copy-btn" data-copy-val="${k}" aria-label="Copy listing link" title="Copy link">${COPY_SVG}</button></div></label>
         <label><span class="lbl">Listed</span><div class="toggle" data-lk="${k}"><span data-v="yes" class="${l.active ? "on" : ""}">Yes</span><span data-v="no" class="${l.active ? "" : "on"}">No</span></div></label>
         <button type="button" class="btn ghost remove-btn" data-remove="${k}">Remove</button>
       </div>`).join("");
@@ -849,16 +849,16 @@
     delete i.ebay; delete i.mercari;
   });
   const mktTone = id => ({ ebay:"t-green", mercari:"t-purple" })[id] || "t-blue";
-  const listingTags = i => i.listings.filter(l => l.active).map(l => `<span class="tag ${mktTone(l.mkt)}">${srcLabel(l.mkt)} ✓</span>`).join("");
-  const listTxt = i => i.listings.filter(l => l.active).map(l => srcLabel(l.mkt)).join(", ") || "—";
+  const listingTags = i => i.listings.filter(l => l.active).map(l => `<span class="tag ${mktTone(l.mkt)}">${escapeHTML(srcLabel(l.mkt))} ✓</span>`).join("");
+  const listTxt = i => i.listings.filter(l => l.active).map(l => escapeHTML(srcLabel(l.mkt))).join(", ") || "—";
 
   function renderInv(list) {
     $("cards").innerHTML = list.map(i => `
       <div class="item ${i.cur === 0 ? "soldout" : ""}">
         ${photoThumb(i.photo, "Photo")}
         <div>
-          <h3>${i.name}</h3>
-          <div class="meta">${i.id} · ${i.mfr} · ${i.loc}</div>
+          <h3>${escapeHTML(i.name)}</h3>
+          <div class="meta">${escapeHTML(i.id)} · ${escapeHTML(i.mfr)} · ${escapeHTML(i.loc)}</div>
           <div class="row"><span>Stock ${i.cur} / sold ${i.sold}</span></div>
           <div class="row"><span>Selling price ${money(i.price)}</span><span>Cost per unit ${money(i.cost)}</span></div>
           <div class="badges">
@@ -870,9 +870,9 @@
       </div>`).join("");
     $("rows").innerHTML = list.map(i => `
       <tr class="${i.cur === 0 ? "soldout" : ""}">
-        <td class="ph">${i.photo && i.photo.startsWith("data:") ? `<img class="thumb" src="${escapeHTML(i.photo)}" alt="Item photo">` : "<span></span>"}</td><td>${i.id}</td><td>${i.mfr}</td><td>${i.line}</td><td>${i.lic}</td><td>${i.name}${i.cur === 0 ? ' <span class="tag t-orange">Sold out</span>' : i.cur === 1 ? ' <span class="tag t-red">Last one</span>' : ""}</td>
-        <td>${i.dims}</td><td>${i.init}</td><td>${i.sold}</td><td>${i.cur}</td><td>${money(i.cost)}</td><td>${money(i.price)}</td>
-        <td>${money(i.cur*i.cost)}</td><td>${i.loc}</td><td>${i.restock}</td><td>${i.listed}</td>
+        <td class="ph">${i.photo && i.photo.startsWith("data:") ? `<img class="thumb" src="${escapeHTML(i.photo)}" alt="Item photo">` : "<span></span>"}</td><td>${escapeHTML(i.id)}</td><td>${escapeHTML(i.mfr)}</td><td>${escapeHTML(i.line)}</td><td>${escapeHTML(i.lic)}</td><td>${escapeHTML(i.name)}${i.cur === 0 ? ' <span class="tag t-orange">Sold out</span>' : i.cur === 1 ? ' <span class="tag t-red">Last one</span>' : ""}</td>
+        <td>${escapeHTML(i.dims)}</td><td>${i.init}</td><td>${i.sold}</td><td>${i.cur}</td><td>${money(i.cost)}</td><td>${money(i.price)}</td>
+        <td>${money(i.cur*i.cost)}</td><td>${escapeHTML(i.loc)}</td><td>${escapeHTML(i.restock)}</td><td>${escapeHTML(i.listed)}</td>
         <td>${listTxt(i)}</td><td>${fmtWt(i.wt)}</td>
       </tr>`).join("");
     setStat($("sItems"), items.length, v => Math.round(v));
@@ -975,7 +975,7 @@
   const receiptCell = r => r && r.startsWith("pdf:") ? `<td class="ph" title="${escapeHTML(r.slice(4))}">PDF</td>` : photoCell(r);
   const photoCell = src => `<td class="ph">${src && src.startsWith("data:") ? `<img class="thumb" src="${escapeHTML(src)}" alt="Item photo">` : "<span></span>"}</td>`;
   function photoThumb(src, label) {
-    return src && src.startsWith("data:") ? `<img class="thumb" src="${src}" alt="${label} image">` : `<div class="photo">${label}</div>`;
+    return src && src.startsWith("data:") ? `<img class="thumb" src="${escapeHTML(src)}" alt="${escapeHTML(label)} image">` : `<div class="photo">${escapeHTML(label)}</div>`;
   }
   const itemOf = id => items.find(i => i.id === id);
   const itemName = id => itemOf(id)?.name || id;
@@ -990,8 +990,8 @@
 
   // ===== App version and updates =====
   // The app reads the latest released version from version.js on each launch.
-  const APP_VERSION = "1.0.2";
-  const LATEST = window.LATEST_RELEASE || { version: "1.0.2", released: "2026-11-22" };
+  const APP_VERSION = "1.0.3";
+  const LATEST = window.LATEST_RELEASE || { version: "1.0.3", released: "2026-11-22" };
   let appVersion = APP_VERSION, updateDismissed = false;
   const newerThan = (a, b) => {
     const x = a.split(".").map(Number), y = b.split(".").map(Number);
@@ -1399,10 +1399,10 @@
       </div>`;
     if (f.t === "conditionalText") return `<label class="full hidden" id="${id}Field"><span class="lbl">${f.l}<span class="req">*</span></span><input type="text" id="${id}" placeholder="${f.ph || ""}"></label>`;
     if (f.t === "toggle") return `<label><span class="lbl">${f.l}${req}</span><div class="toggle" id="${id}"><span data-v="yes">Yes</span><span data-v="no">No</span></div></label>`;
-    if (f.t === "src") return `<label><span class="lbl">${f.l}${req}</span><select id="${id}">${profiles.map(p => `<option value="${p.id}">${p.name}</option>`).join("")}</select></label>`;
+    if (f.t === "src") return `<label><span class="lbl">${f.l}${req}</span><select id="${id}">${profiles.map(p => `<option value="${p.id}">${escapeHTML(p.name)}</option>`).join("")}</select></label>`;
     if (f.t === "tpl") return `<label><span class="lbl">${f.l}</span><select id="${id}"><option value="">Custom (start blank)</option>${Object.keys(TEMPLATES).map(k => `<option value="${k}">${k}</option>`).join("")}</select></label>`;
     if (f.t === "select") return `<label${f.full ? ' class="full"' : ""}><span class="lbl">${f.l}${req}</span><select id="${id}">${f.o.map(o => `<option>${o}</option>`).join("")}</select></label>`;
-    if (f.t === "sale") return `<label class="full"><span class="lbl">${f.l}${req}</span><select id="${id}"><option value="">Select original sale…</option>${sales.map((s,i) => `<option value="${i}">${s.itemId} · ${s.date} · ${srcLabel(s.src)} · ${money(calcSale(s).total)}</option>`).join("")}</select></label>`;
+    if (f.t === "sale") return `<label class="full"><span class="lbl">${f.l}${req}</span><select id="${id}"><option value="">Select original sale…</option>${sales.map((s,i) => `<option value="${i}">${escapeHTML(s.itemId)} · ${escapeHTML(s.date)} · ${srcLabel(s.src)} · ${money(calcSale(s).total)}</option>`).join("")}</select></label>`;
     if (f.t === "dims") return `<label class="full"><span class="lbl">${f.l}${req}</span>
         <div class="three">
           <input type="text" inputmode="numeric" maxlength="2" id="x-dimL" placeholder="L" aria-label="Length">
@@ -1514,7 +1514,7 @@
     $("sTitle").textContent = rec ? "Edit " + SHEET[mode].t.replace(/^New /, "").toLowerCase() : SHEET[mode].t;
     $("sSub").textContent = SHEET[mode].s;
     buildForm(curGroups);
-    $("ids").innerHTML = items.map(i => `<option value="${i.id}">`).join("");
+    $("ids").innerHTML = items.map(i => `<option value="${escapeHTML(i.id)}">`).join("");
     applyDefaults(curGroups);
     if (mode === "sale") $("x-cog").dataset.touched = "";
     if (mode === "goals") Object.keys(goals).forEach(k => $("x-" + k).value = goals[k]);
@@ -1715,7 +1715,7 @@
     $("lCards").innerHTML = visible(sales).map((s,i) => { const c = cs[i]; return `
       <div class="item">${photoThumb(itemPhoto(s.itemId), "Sale")}<div>
         <h3>${escapeHTML(itemName(s.itemId))}</h3>
-        <div class="meta">${s.itemId} · ${s.date} · ${srcLabel(s.src)} · Qty ${s.qty} · ${s.sig ? "Signature" : "No signature"}</div>
+        <div class="meta">${escapeHTML(s.itemId)} · ${escapeHTML(s.date)} · ${srcLabel(s.src)} · Qty ${s.qty} · ${s.sig ? "Signature" : "No signature"}</div>
         <div class="row"><span>Total ${money(c.total)}</span><span class="profit">Profit ${money(c.profit)}</span></div>
         <div class="badges">${tag(srcLabel(s.src)+" fee "+money(c.fee))}${tag(s.dims||"—")}</div>
       </div></div>`; }).join("");
@@ -1965,7 +1965,7 @@
     showBanner(b);
     b.innerHTML = `<div><strong>${it.name} is sold out but still listed on ${where}.</strong>
         Remove the listings you no longer need so you don't take orders you can't fulfill.</div>
-      <div class="btns"><button class="btn" data-skip="${it.id}">Dismiss</button><button class="btn solid" data-go="inv">Review inventory</button></div>`;
+      <div class="btns"><button class="btn" data-skip="${escapeHTML(it.id)}">Dismiss</button><button class="btn solid" data-go="inv">Review inventory</button></div>`;
   }
   document.addEventListener("click", e => {
     if (e.target.closest("[data-backup]")) doBackup();
@@ -1985,14 +1985,14 @@
     $(headId).innerHTML = "<tr>" + ["Photo","Item ID","Name","Current stock","Date listed","Age (days)","Stage","Recommended action"].map(c => `<th>${c}</th>`).join("") + "</tr>";
     $(rowsId).innerHTML = list.map(i => {
       const st = STAGES[stageOf(i.age)];
-      return `<tr data-id="${i.id}"><td class="ph">${i.photo && i.photo.startsWith("data:") ? `<img class="thumb" src="${escapeHTML(i.photo)}" alt="Item photo">` : "<span></span>"}</td><td>${i.id}</td><td>${i.name}</td><td>${i.cur}</td><td>${i.listed}</td><td>${i.age}</td>
+      return `<tr data-id="${escapeHTML(i.id)}"><td class="ph">${i.photo && i.photo.startsWith("data:") ? `<img class="thumb" src="${escapeHTML(i.photo)}" alt="Item photo">` : "<span></span>"}</td><td>${escapeHTML(i.id)}</td><td>${escapeHTML(i.name)}</td><td>${i.cur}</td><td>${escapeHTML(i.listed)}</td><td>${i.age}</td>
         <td>${tag(st.name)}</td><td>${st.action}</td></tr>`;
     }).join("");
     $(cardsId).innerHTML = list.map(i => {
       const st = STAGES[stageOf(i.age)];
-      return `<div class="item" data-id="${i.id}">${photoThumb(i.photo, "Photo")}<div>
-        <h3>${i.name}</h3>
-        <div class="meta">${i.id} · Listed ${i.listed} · ${i.age} days</div>
+      return `<div class="item" data-id="${escapeHTML(i.id)}">${photoThumb(i.photo, "Photo")}<div>
+        <h3>${escapeHTML(i.name)}</h3>
+        <div class="meta">${escapeHTML(i.id)} · Listed ${escapeHTML(i.listed)} · ${i.age} days</div>
         <div class="row"><span>Stock ${i.cur}</span><span class="profit">${st.name}</span></div>
         <div class="badges"><span class="tag t-${TONE[st.name]}">${st.action}</span></div>
       </div></div>`;
@@ -2234,7 +2234,10 @@
   const REPORT_NAMES = { summary: "Summary", sales: "Sales", returns: "Returns", expenses: "Expenses", preorders: "Preorders", inventory: "Inventory" };
   function csvCell(v) {
     if (v === null || v === undefined) return "";
-    const t = String(v);
+    let t = String(v);
+    // Stop spreadsheet apps from running user text as a formula.
+    // A leading "-" is only neutralized when it isn't a plain number or money amount (e.g. -12.00, -$12.00).
+    if (/^[=+@\t\r]/.test(t) || /^-(?![$\d.,]+$)/.test(t)) t = "'" + t;
     return /[",\r\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t;
   }
   function toCsv(rows) {
@@ -2399,8 +2402,8 @@
     $("mktList").innerHTML = profiles.map(p => `
       <div class="mkt-row">
         <div>
-          <div><strong>${p.name}</strong> <span class="meta">· ${p.type}</span></div>
-          <div class="meta">${feeSummary(p)} · ${sales.filter(s => s.src === p.id).length} sales${p.notes ? " · " + p.notes : ""}</div>
+          <div><strong>${escapeHTML(p.name)}</strong> <span class="meta">· ${p.type}</span></div>
+          <div class="meta">${feeSummary(p)} · ${sales.filter(s => s.src === p.id).length} sales${p.notes ? " · " + escapeHTML(p.notes) : ""}</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
           ${p.checked ? `<span class="tag ${daysSince(p.checked) >= 90 ? "t-gold" : "t-blue"}">Checked ${p.checked} ✓</span>` : `<span class="tag t-red">Not verified</span>`}
@@ -2608,7 +2611,7 @@
     if (kind === "restock") return [
       { val:"new", label:"Newest first", on:invDesc }, { val:"old", label:"Oldest first", on:!invDesc }
     ].map(o => ({ ...o, kind }));
-    return [{ val:"__unlisted", label:"Unlisted first", on:mktSort === "__unlisted" }, ...profiles.map(p => ({ val:p.id, label:`${p.name} first`, on:mktSort === p.id }))]
+    return [{ val:"__unlisted", label:"Unlisted first", on:mktSort === "__unlisted" }, ...profiles.map(p => ({ val:p.id, label:`${escapeHTML(p.name)} first`, on:mktSort === p.id }))]
       .map(o => ({ ...o, kind }));
   }
   function closeChipMenu() { chipMenu.classList.remove("open"); if (chipMenu._owner) chipMenu._owner.classList.remove("menu-open"); chipMenu._owner = null; }
@@ -2713,46 +2716,172 @@
   $("exportBtn").onclick = () => doBackup();
   let pendingImport = null;
   const isObject = value => value !== null && typeof value === "object" && !Array.isArray(value);
+  // ===== Backup import validation: every field is checked before it reaches the app =====
+  const IMPORT_LIMITS = { maxFileBytes: 25 * 1024 * 1024, maxRecords: 20000, maxPhotoChars: 2 * 1024 * 1024, maxListings: 50 };
+  const cleanText = (v, max = 200) => typeof v === "string" ? v.trim().slice(0, max) : "";
+  const cleanDate = v => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : "";
+  const cleanNum = (v, min, max) => {
+    const n = typeof v === "number" ? v : typeof v === "string" && v.trim() !== "" ? Number(v) : NaN;
+    return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : 0;
+  };
+  const cleanProfileId = v => typeof v === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(v) ? v : "";
+  const cleanLink = v => /^\s*(javascript|data|vbscript):/i.test(String(v ?? "")) ? "" : cleanText(v, 500);
+  const cleanEnum = (list, fallback = "") => v => list.includes(v) ? v : fallback;
+  const PHOTO_RE = /^data:image\/(webp|jpeg|png);base64,[A-Za-z0-9+/]+=*$/;
+  const cleanPhoto = v => typeof v === "string" && v.length <= IMPORT_LIMITS.maxPhotoChars && PHOTO_RE.test(v) ? v : "";
+  const cleanReceipt = v => typeof v === "string" && v.startsWith("pdf:") ? "pdf:" + cleanText(v.slice(4), 200) : cleanPhoto(v);
+  const cleanWeight = v => Array.isArray(v) ? [cleanNum(v[0], 0, 1000), cleanNum(v[1], 0, 1000)] : [0, 0];
+  const cleanSaleRef = v => Number.isInteger(v) && v >= 0 && v < 1e6 ? v : null;
+
+  // Field cleaners. Each returns a safe value for any input, including undefined.
+  const F = {
+    text: v => cleanText(v, 200),
+    long: v => cleanText(v, 2000),
+    id: v => cleanText(v, 64),
+    dims: v => cleanText(v, 60),
+    date: cleanDate,
+    money: v => cleanNum(v, -1e7, 1e7),
+    pct: v => cleanNum(v, 0, 100),
+    count: v => cleanNum(v, 0, 1e6),
+    flag: v => v === true,
+    photo: cleanPhoto,
+    receipt: cleanReceipt,
+    weight: cleanWeight,
+    profileId: cleanProfileId,
+    saleRef: cleanSaleRef
+  };
+
+  // Status and choice lists copied from the form definitions
+  const RETURN_REASONS = ["Not as described", "Damaged in shipping", "Wrong item", "Changed mind", "Didn't arrive", "Other", "Defective", "Overstock"];
+  const RETURN_STATUSES = ["Requested", "Label issued", "Item received", "Refund issued", "Completed", "Denied", "Shipped back", "Received", "Refund pending"];
+  const CREDIT_TYPES = ["Refund to card", "Store credit", "Replacement item"];
+  const EXPENSE_CATEGORIES = ["Inventory purchase", "Shipping supplies", "Travel", "Technology", "Utilities", "Subscriptions", "Other"];
+  const PAYMENT_METHODS = ["Credit card", "Debit card", "Cash", "PayPal", "Other"];
+  const CONDITIONS = ["New", "Like new", "Used", "For parts"];
+  const PREORDER_STATUSES = ["Awaiting", "Delayed", "Received", "Canceled"];
+  const COMMS_STATUSES = ["Communication Sent", "Delayed Notified", "Shipping Label Created"];
+  const PROFILE_TYPES = ["Online marketplace", "In person or direct"];
+
+  // Each schema lists the only fields the app reads or writes for that record type.
+  const SCHEMA = {
+    inventory: { id:F.id, name:F.text, mfr:F.text, line:F.text, lic:F.text, dims:F.dims, init:F.count, sold:F.count, cur:F.count,
+      cost:F.money, price:F.money, loc:F.text, restock:F.date, listed:F.date, photo:F.photo, wt:F.weight, sample:F.flag },
+    sale: { src:F.profileId, date:F.date, itemId:F.id, qty:F.count, price:F.money, tax:F.money, buyShip:F.money, sig:F.flag,
+      cog:F.money, sellShip:F.money, dims:F.dims, tracking:F.text, sample:F.flag,
+      snap: v => isObject(v) ? cleanRecord(SCHEMA.profile, v) : null },
+    return: { kind:cleanEnum(["customer", "vendor"]), reqDate:F.date, recDate:F.date, saleRef:F.saleRef, itemId:F.id, qty:F.count,
+      reason:cleanEnum(RETURN_REASONS), refundIssued:F.money, feeRefunded:F.money, buyerShip:F.money, sellerShip:F.money,
+      restock:F.flag, restocked:F.flag, cogLoss:F.money, status:cleanEnum(RETURN_STATUSES), tracking:F.text, notes:F.long,
+      poNum:F.text, vendor:F.text, origCost:F.money, retShip:F.money, refund:F.money, creditType:cleanEnum(CREDIT_TYPES), sample:F.flag },
+    expense: { date:F.date, category:cleanEnum(EXPENSE_CATEGORIES), categoryOther:F.text, itemId:F.id, name:F.text, vendor:F.text,
+      units:F.count, total:F.money, tax:F.money, ship:F.money, duties:F.money, cc:F.money, pay:cleanEnum(PAYMENT_METHODS),
+      cond:cleanEnum(CONDITIONS), receipt:F.receipt, sample:F.flag },
+    preorder: { itemId:F.id, name:F.text, mfr:F.text, line:F.text, lic:F.text, poNum:F.text, qty:F.count, orderDate:F.date,
+      vendor:F.text, eta:F.date, cpu:F.money, status:cleanEnum(PREORDER_STATUSES), comms:cleanEnum(COMMS_STATUSES),
+      moved:F.flag, sample:F.flag },
+    profile: { id:F.profileId, name:F.text, type:cleanEnum(PROFILE_TYPES, "Online marketplace"), shipPolicy:cleanEnum(SHIP_POLICIES, "Seller pays shipping"),
+      feeOnShipping:v => v !== false, pct:F.pct, fixed:F.money, tierMax:F.money, belowPct:F.pct, belowFixed:F.money,
+      procPct:F.pct, procFixed:F.money, notes:F.long, checked:F.date }
+  };
+
+  // Keeps only schema fields. Every schema field is always present in the output, with a safe default.
+  function cleanRecord(schema, raw) {
+    const out = {};
+    Object.keys(schema).forEach(key => { out[key] = schema[key](raw[key]); });
+    return out;
+  }
+  // Older backups stored marketplace flags instead of a listings list. Support both.
+  function cleanListings(raw) {
+    if (Array.isArray(raw.listings)) {
+      return raw.listings.slice(0, IMPORT_LIMITS.maxListings).filter(isObject)
+        .map(l => ({ mkt: cleanProfileId(l.mkt), url: cleanLink(l.url), active: l.active !== false }))
+        .filter(l => l.mkt);
+    }
+    return [["ebay", raw.ebay], ["mercari", raw.mercari]].filter(([, on]) => Boolean(on))
+      .map(([mkt]) => ({ mkt, url: "", active: true }));
+  }
+  // Turns a JSON syntax error into a message that tells the person what to check
+  function parseBackupText(text) {
+    try { return JSON.parse(text); }
+    catch (err) {
+      throw new Error(`This file isn't valid JSON, so it can't be restored. If you edited it by hand, check for a missing comma, quote, or bracket. (${err.message})`);
+    }
+  }
   function normalizeBackup(value) {
     if (!isObject(value) || (value.app && value.app !== "Exsellsior")
       || !Array.isArray(value.inventory) || !Array.isArray(value.sales)) {
       throw new Error("Choose a JSON backup exported from Exsellsior.");
     }
-    const records = ["inventory", "sales", "returns", "expenses", "preorders"];
-    records.forEach(key => {
-      if (value[key] !== undefined && (!Array.isArray(value[key]) || value[key].some(row => !isObject(row)))) {
-        throw new Error(`The backup's ${key} data is invalid.`);
-      }
+    ["inventory", "sales", "returns", "expenses", "preorders"].forEach(key => {
+      const rows = value[key] ?? [];
+      if (!Array.isArray(rows) || rows.some(row => !isObject(row))) throw new Error(`The backup's ${key} data is invalid.`);
+      if (rows.length > IMPORT_LIMITS.maxRecords) throw new Error(`The backup has more than ${IMPORT_LIMITS.maxRecords} ${key} records.`);
     });
-    const inventory = value.inventory.map(item => {
-      if (typeof item.id !== "string" || !item.id.trim() || typeof item.name !== "string" || !item.name.trim()) {
-        throw new Error("Each inventory item must have an Item ID and name.");
-      }
-      const listings = Array.isArray(item.listings)
-        ? item.listings.filter(listing => isObject(listing) && typeof listing.mkt === "string")
-          .map(listing => ({ mkt:listing.mkt, url:String(listing.url || ""), active:listing.active !== false }))
-        : [["ebay", item.ebay], ["mercari", item.mercari]]
-          .filter(([, active]) => active).map(([mkt]) => ({ mkt, url:"", active:true }));
-      return { ...item, mfr:item.mfr || "", line:item.line || "", lic:item.lic || "—", dims:item.dims || "",
-        init:num(item.init), sold:num(item.sold), cur:num(item.cur), cost:num(item.cost), price:num(item.price),
-        loc:item.loc || "", restock:item.restock || "", listed:item.listed || "", listings,
-        wt:Array.isArray(item.wt) ? [num(item.wt[0]), num(item.wt[1])] : [0,0], photo:item.photo || "" };
+
+    const inventory = value.inventory.map(raw => {
+      const item = cleanRecord(SCHEMA.inventory, raw);
+      if (!item.id || !item.name) throw new Error("Each inventory item must have an Item ID and name.");
+      item.listings = cleanListings(raw);
+      return item;
     });
-    const optionalRecords = key => value[key] || [];
-    if (value.marketplaces !== undefined && (!Array.isArray(value.marketplaces)
-      || value.marketplaces.some(profile => !isObject(profile) || typeof profile.id !== "string" || typeof profile.name !== "string"))) {
-      throw new Error("The backup's marketplace data is invalid.");
+    const itemIds = new Set();
+    inventory.forEach(item => {
+      if (itemIds.has(item.id)) throw new Error(`The backup lists Item ID ${item.id} more than once.`);
+      itemIds.add(item.id);
+    });
+
+    let marketplaces = structuredClone(DEFAULT_PROFILES);
+    if (value.marketplaces !== undefined) {
+      if (!Array.isArray(value.marketplaces) || value.marketplaces.some(p => !isObject(p))) {
+        throw new Error("The backup's marketplace data is invalid.");
+      }
+      marketplaces = value.marketplaces.slice(0, 200).map(raw => cleanRecord(SCHEMA.profile, raw));
+      if (marketplaces.some(p => !p.id || !p.name)) throw new Error("Each marketplace needs an ID and a name.");
+      const profileIds = new Set();
+      marketplaces.forEach(p => {
+        if (profileIds.has(p.id)) throw new Error(`The backup lists marketplace ${p.id} more than once.`);
+        profileIds.add(p.id);
+      });
     }
-    if (value.goals !== undefined && (!isObject(value.goals)
-      || ["sold","revenue","profit"].some(key => value.goals[key] !== undefined && !Number.isFinite(value.goals[key])))) {
-      throw new Error("The backup's goals data is invalid.");
+
+    const rawGoals = isObject(value.goals) ? value.goals : {};
+    const goals = {
+      sold: cleanNum(rawGoals.sold ?? 20, 0, 1e6),
+      revenue: cleanNum(rawGoals.revenue ?? 1000, 0, 1e9),
+      profit: cleanNum(rawGoals.profit ?? 500, -1e9, 1e9)
+    };
+
+    let settings = null;
+    if (isObject(value.settings)) {
+      const s = value.settings;
+      settings = {
+        fyStartMonth: Number.isInteger(s.fyStartMonth) && s.fyStartMonth >= 0 && s.fyStartMonth <= 11 ? s.fyStartMonth : 0,
+        setup: isObject(s.setup) ? Object.fromEntries(["fy", "fees", "item", "sale", "backup"].map(k => [k, s.setup[k] === true])) : {},
+        setupDone: s.setupDone === true,
+        sampleLoaded: s.sampleLoaded === true,
+        changesSince: cleanNum(s.changesSince, 0, 1e6),
+        lastBackup: cleanDate(s.lastBackup) || null,
+        snoozeUntil: cleanNum(s.snoozeUntil, 0, 1e15),
+        reportSeen: Array.isArray(s.reportSeen) ? s.reportSeen.slice(0, 200).map(k => cleanText(k, 100)) : [],
+        pwaDismissed: s.pwaDismissed === true,
+        pwaNextAt: cleanNum(s.pwaNextAt, 0, 1e9),
+        monthBannerKey: cleanText(s.monthBannerKey, 20),
+        celebrated: {
+          sales: cleanNum(s.celebrated?.sales, 0, 1e6),
+          items: cleanNum(s.celebrated?.items, 0, 1e6),
+          listings: cleanNum(s.celebrated?.listings, 0, 1e6)
+        },
+        feeDismissDay: cleanDate(s.feeDismissDay)
+      };
     }
-    if (value.settings !== undefined && !isObject(value.settings)) throw new Error("The backup's settings data is invalid.");
+
     return {
-      inventory, sales:value.sales, returns:optionalRecords("returns"), expenses:optionalRecords("expenses"),
-      preorders:optionalRecords("preorders"),
-      marketplaces:value.marketplaces ? structuredClone(value.marketplaces) : structuredClone(DEFAULT_PROFILES),
-      goals:value.goals || { sold:20, revenue:1000, profit:500 }, settings:value.settings || null
+      inventory,
+      sales: value.sales.map(raw => cleanRecord(SCHEMA.sale, raw)),
+      returns: (value.returns ?? []).map(raw => cleanRecord(SCHEMA.return, raw)),
+      expenses: (value.expenses ?? []).map(raw => cleanRecord(SCHEMA.expense, raw)),
+      preorders: (value.preorders ?? []).map(raw => cleanRecord(SCHEMA.preorder, raw)),
+      marketplaces, goals, settings
     };
   }
   function applyBackupSettings(settings) {
@@ -2831,10 +2960,11 @@
     const f = e.target.files[0];
     pendingImport = null; $("importBtn").disabled = true;
     if (!f) { $("impMsg").textContent = "No file selected."; return; }
+    if (f.size > IMPORT_LIMITS.maxFileBytes) { $("impMsg").textContent = "This file is larger than the 25 MB import limit."; return; }
     const reader = new FileReader();
     reader.onload = () => {
       try {
-        pendingImport = normalizeBackup(JSON.parse(String(reader.result)));
+        pendingImport = normalizeBackup(parseBackupText(String(reader.result)));
         $("impMsg").textContent = `Backup found: ${pendingImport.inventory.length} inventory items, ${pendingImport.sales.length} sales, ${pendingImport.returns.length} returns, ${pendingImport.expenses.length} expenses, ${pendingImport.preorders.length} preorders.`;
         $("importBtn").disabled = false;
       } catch (err) {

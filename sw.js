@@ -1,7 +1,7 @@
 // Service worker for Exsellsior. Caches the app shell so the app opens offline
 // and the browser can offer the install prompt.
 // When any shell file changes, raise CACHE so users get the new files.
-const CACHE = "exsellsior-shell-v6";
+const CACHE = "exsellsior-shell-v7";
 const SHELL = [
   "./",
   "./index.html",
@@ -23,6 +23,7 @@ const SHELL = [
 ];
 
 self.addEventListener("install", event => {
+  // addAll is all-or-nothing: one missing file stops the whole install
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));
 });
 
@@ -44,11 +45,28 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request).then(hit => hit || fetch(event.request).then(response => {
-      const copy = response.clone();
-      caches.open(CACHE).then(cache => cache.put(event.request, copy));
+  const isPage = event.request.mode === "navigate";
+
+  event.respondWith((async () => {
+    // For page loads, ignore the query string so index.html?x=1 still matches the cached page
+    const hit = await caches.match(event.request, { ignoreSearch: isPage });
+    if (hit) return hit;
+
+    try {
+      const response = await fetch(event.request);
+      // Only cache good, same-origin responses. Errors and redirects are never stored.
+      if (response.ok && response.type === "basic") {
+        const copy = response.clone();
+        event.waitUntil(caches.open(CACHE).then(cache => cache.put(event.request, copy)));
+      }
       return response;
-    }))
-  );
+    } catch (error) {
+      // Offline page load: fall back to the cached app
+      if (isPage) {
+        const shell = await caches.match("./index.html");
+        if (shell) return shell;
+      }
+      throw error;
+    }
+  })());
 });
